@@ -120,22 +120,19 @@ def encode_jpeg_image(image: np.ndarray, quality_value: int) -> np.ndarray:
     return encoded_image
 
 
-def process_image(
-    file: FileStorage, processed_dir: Path, raw_resolution: str, raw_quality: str
+def process_image_array(
+    image: np.ndarray, original_filename: str, processed_dir: Path, raw_resolution: str, raw_quality: str
 ) -> ProcessedImageResult:
-    validated_file = validate_file(file)
     requested_size = parse_resolution(raw_resolution)
     quality_label, quality_value = parse_quality(raw_quality)
-
-    original_filename = secure_filename(validated_file.filename or "") or "image.jpg"
-    image = decode_image_from_upload(validated_file)
+    safe_original_filename = secure_filename(original_filename) or "image.jpg"
 
     original_height, original_width = image.shape[:2]
     output_size = fit_within_resolution((original_width, original_height), requested_size)
     resized_image = cv2.resize(image, output_size, interpolation=cv2.INTER_AREA)
     encoded_image = encode_jpeg_image(resized_image, quality_value)
 
-    output_filename = build_output_name(original_filename, requested_size, quality_label)
+    output_filename = build_output_name(safe_original_filename, requested_size, quality_label)
     output_path = processed_dir / output_filename
     saved = output_path.write_bytes(encoded_image.tobytes())
     if not saved:
@@ -150,3 +147,29 @@ def process_image(
         quality_label=quality_label,
         quality_value=quality_value,
     )
+
+
+def process_image(
+    file: FileStorage, processed_dir: Path, raw_resolution: str, raw_quality: str
+) -> ProcessedImageResult:
+    validated_file = validate_file(file)
+    original_filename = validated_file.filename or "image.jpg"
+    image = decode_image_from_upload(validated_file)
+    return process_image_array(image, original_filename, processed_dir, raw_resolution, raw_quality)
+
+
+def process_image_file(
+    input_path: Path, processed_dir: Path, raw_resolution: str, raw_quality: str
+) -> ProcessedImageResult:
+    source_path = Path(input_path)
+    if not source_path.exists():
+        raise ImageProcessingError(f"Input file not found: {source_path}")
+
+    if source_path.suffix.lower().lstrip(".") not in ALLOWED_EXTENSIONS:
+        raise ImageProcessingError("Only .jpg and .jpeg files are supported.")
+
+    image = cv2.imread(str(source_path))
+    if image is None:
+        raise ImageProcessingError("The input image could not be read.")
+
+    return process_image_array(image, source_path.name, processed_dir, raw_resolution, raw_quality)
