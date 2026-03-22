@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}JPEG Tool | Resize and Compress{% endblock %}
+
+{% block content %}
+<main class="page-shell">
+    <section class="hero-card">
+        <div class="hero-copy">
+            <p class="eyebrow">Portfolio-ready image utility</p>
+            <h1>Resize and compress JPEGs with a cleaner, modern workflow.</h1>
+            <p class="hero-text">
+                Upload a JPEG, choose a target resolution and quality preset, then generate
+                an optimized image preview in one step.
+            </p>
+            <div class="hero-metrics">
+                <div class="metric">
+                    <span class="metric-label">Input</span>
+                    <strong>JPEG / JPG</strong>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Engine</span>
+                    <strong>Flask + OpenCV</strong>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Output</span>
+                    <strong>Resized JPEG</strong>
+                </div>
+            </div>
+        </div>
+
+        <section class="studio-card" aria-labelledby="studio-title">
+            <div class="studio-header">
+                <div>
+                    <p class="section-tag">Studio</p>
+                    <h2 id="studio-title">Drop your image here</h2>
+                </div>
+                <p class="studio-hint">Only `.jpg` and `.jpeg` files are supported.</p>
+            </div>
+
+            <form id="upload-form" class="studio-form">
+                <label class="dropzone" id="dropzone" for="file-input">
+                    <input id="file-input" name="file" type="file" accept=".jpg,.jpeg,image/jpeg">
+                    <div class="dropzone-content" id="dropzone-content">
+                        <div class="dropzone-icon">+</div>
+                        <div>
+                            <h3>Select or drag a JPEG</h3>
+                            <p>Preview the image instantly before processing it.</p>
+                        </div>
+                    </div>
+                    <img id="preview-image" class="preview-image hidden" alt="Selected image preview">
+                </label>
+
+                <div class="controls-grid">
+                    <label class="field">
+                        <span>Resolution</span>
+                        <select id="resolution" name="resolution">
+                            {% for value, label in resolution_presets.items() %}
+                            <option value="{{ value }}">{{ label }} - {{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+
+                    <label class="field">
+                        <span>Quality</span>
+                        <select id="quality" name="quality">
+                            <option value="low">Low - Smaller file</option>
+                            <option value="medium" selected>Medium - Balanced</option>
+                            <option value="high">High - Better detail</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="actions-row">
+                    <button type="submit" class="primary-button" id="process-button">Process image</button>
+                    <p class="status-text" id="status-text">Ready when you are.</p>
+                </div>
+            </form>
+        </section>
+    </section>
+
+    <section class="result-card" id="result-card" aria-live="polite">
+        <div class="result-empty" id="result-empty">
+            <p class="section-tag">Result</p>
+            <h2>Your processed image will appear here.</h2>
+            <p>We'll show the preview, final size, selected quality, and a direct download link.</p>
+        </div>
+
+        <div class="result-content hidden" id="result-content">
+            <div class="result-copy">
+                <div>
+                    <p class="section-tag">Processed</p>
+                    <h2 id="result-title">Optimized JPEG ready</h2>
+                </div>
+                <a class="secondary-button" id="download-link" href="#" target="_blank" rel="noopener">Open full image</a>
+            </div>
+
+            <div class="result-preview-shell">
+                <img id="result-image" class="result-image" alt="Processed result preview">
+            </div>
+
+            <div class="result-meta">
+                <article class="meta-chip">
+                    <span>Original</span>
+                    <strong id="original-meta">-</strong>
+                </article>
+                <article class="meta-chip">
+                    <span>Requested</span>
+                    <strong id="requested-meta">-</strong>
+                </article>
+                <article class="meta-chip">
+                    <span>Output</span>
+                    <strong id="output-meta">-</strong>
+                </article>
+                <article class="meta-chip">
+                    <span>Quality</span>
+                    <strong id="quality-meta">-</strong>
+                </article>
+            </div>
+
+            <p class="result-filename" id="result-filename"></p>
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+{% endblock %}
